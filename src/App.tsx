@@ -1,26 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import useFetchBreweries from './useFetchBreweries';
+import { Container } from 'react-bootstrap';
+import { useState } from 'react';
+import Brewery from './Brewery';
+import BreweryPagination from './BreweryPagination';
+import SearchForm from './SearchForm';
+import { ISearchParams } from './helper';
 
-function App() {
+const App = () => {
+  const [searchParams, setSearchParams] = useState<ISearchParams>({ name: '' });
+  const [page, setPage] = useState<number>(1);
+  const { breweries, loading, error, hasNextPage } = useFetchBreweries(searchParams, page);
+
+  const handleParamChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const param = event.target.name;
+    const value = event.target.value;
+    setPage(1);
+    setSearchParams(prevParams => {
+      return { ...prevParams, [param]: value };
+    });
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container className='my-4'>
+      <h1 className='md-4'>Breweries</h1>
+      <SearchForm params={searchParams} onParamsChange={handleParamChange}/>
+      <BreweryPagination page={page} setPage={setPage} hasNextPage={hasNextPage}/>
+      { loading && <h1>Loading...</h1> }
+      { error && <h1>Error. Try refreshing</h1> }
+      { breweries.map(brewery => {
+          return <Brewery key={brewery.id} brewery={brewery}/>
+      })}
+      <BreweryPagination page={page} setPage={setPage} hasNextPage={hasNextPage}/>
+    </Container>
   );
 }
 
-export default App;
+export default App
